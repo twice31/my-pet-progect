@@ -1,30 +1,32 @@
 ﻿namespace Domain.ExchangeRequest.VO
 {
-    // Перечисление для Статуса запроса обмена
     public enum ExchangeRequestStatus
     {
-        Requested, // Запрашивается
-        InProgress, // В процессе
-        Completed // завершено
+        Requested,   // Запрошено
+        InProgress,  // В процессе
+        Completed    // Завершено
     }
 
-    // Объект значения для статуса запроса обмена
     public record ExchangeRequestStatusValue
     {
         public ExchangeRequestStatus Status { get; }
 
-        public ExchangeRequestStatusValue(ExchangeRequestStatus status)
+        private ExchangeRequestStatusValue(ExchangeRequestStatus status)
         {
             Status = status;
         }
 
-        // Переопределяем метод ToString для вывода на русском языке
+        public static ExchangeRequestStatusValue Create(ExchangeRequestStatus status)
+        {
+            return new ExchangeRequestStatusValue(status);
+        }
+
         public override string ToString() => Status switch
         {
-            ExchangeRequestStatus.Requested => "Запрашивается",
+            ExchangeRequestStatus.Requested => "Запрошено",
             ExchangeRequestStatus.InProgress => "В процессе",
             ExchangeRequestStatus.Completed => "Завершено",
-            _ => "Неизвестно" // Для обработки неизвестных значений
+            _ => "Неизвестный статус"
         };
     }
 }

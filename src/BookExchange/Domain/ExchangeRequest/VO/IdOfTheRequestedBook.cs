@@ -4,14 +4,17 @@
     {
         public Guid Value { get; }
 
-        public RequestedBookId(Guid value)
+        private RequestedBookId(Guid value)
+        {
+            Value = value;
+        }
+
+        public static RequestedBookId Create(Guid value)
         {
             if (value == Guid.Empty)
-            {
                 throw new ArgumentException("Идентификатор запрашиваемой книги не может быть пустым.", nameof(value));
-            }
 
-            Value = value;
+            return new RequestedBookId(value);
         }
 
         public override string ToString() => Value.ToString();

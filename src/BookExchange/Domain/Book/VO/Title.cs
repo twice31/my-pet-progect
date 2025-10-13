@@ -1,21 +1,26 @@
 ﻿namespace Domain.Book.VO
 {
-    // Объект значения для Названия книги
     public record Title
     {
         public string Value { get; }
 
-        public Title(string value)
+        // Закрытый конструктор
+        private Title(string value)
         {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                throw new ArgumentException("Название книги не может быть пустым.", nameof(value));
-            }
-
             Value = value;
         }
 
-        // Переопределяем метод ToString для вывода в виде строки
+        // Фабричный метод
+        public static Title Create(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                throw new ArgumentException("Название книги не может быть пустым или состоять только из пробелов.", nameof(value));
+            }
+
+            return new Title(value);
+        }
+
         public override string ToString() => Value;
     }
 }

@@ -5,17 +5,23 @@
     {
         public Guid Value { get; }
 
-        public UserId(Guid value)
+        // Закрытый конструктор
+        private UserId(Guid value)
+        {
+            Value = value;
+        }
+
+        // Фабричный метод для создания объекта
+        public static UserId Create(Guid value)
         {
             if (value == Guid.Empty)
             {
                 throw new ArgumentException("Идентификатор пользователя не может быть пустым.", nameof(value));
             }
 
-            Value = value;
+            return new UserId(value);
         }
 
-        // Переопределяем метод ToString для вывода в виде строки
         public override string ToString() => Value.ToString();
     }
 }

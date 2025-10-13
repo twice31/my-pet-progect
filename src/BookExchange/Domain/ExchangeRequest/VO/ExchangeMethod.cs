@@ -4,14 +4,17 @@
     {
         public string Method { get; }
 
-        public ExchangeMethod(string method)
+        private ExchangeMethod(string method)
+        {
+            Method = method;
+        }
+
+        public static ExchangeMethod Create(string method)
         {
             if (string.IsNullOrWhiteSpace(method))
-            {
                 throw new ArgumentException("Метод обмена не может быть пустым.", nameof(method));
-            }
 
-            Method = method;
+            return new ExchangeMethod(method);
         }
 
         public override string ToString() => Method;

@@ -14,12 +14,28 @@
     {
         public BookStatus Status { get; }
 
-        public BookStatusValue(BookStatus status)
+        // Закрытый конструктор
+        private BookStatusValue(BookStatus status)
         {
             Status = status;
         }
 
-        // Переопределяем метод ToString для вывода в виде строки
-        public override string ToString() => Status.ToString();
+        // Фабричный метод
+        public static BookStatusValue Create(BookStatus status)
+        {
+            return new BookStatusValue(status);
+        }
+
+        public override string ToString()
+        {
+            return Status switch
+            {
+                BookStatus.Available => "Доступна",
+                BookStatus.Reserved => "Зарезервирована",
+                BookStatus.Exchanged => "Завершён обмен",
+                BookStatus.NotAvailable => "Недоступна",
+                _ => "Неизвестный статус"
+            };
+        }
     }
 }

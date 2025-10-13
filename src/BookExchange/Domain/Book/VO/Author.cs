@@ -1,21 +1,26 @@
 ﻿namespace Domain.Book.VO
 {
-    // Объект значения для Автора книги
     public record Author
     {
         public string Name { get; }
 
-        public Author(string name)
+        // Закрытый конструктор
+        private Author(string name)
         {
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                throw new ArgumentException("Имя автора не может быть пустым.", nameof(name));
-            }
-
             Name = name;
         }
 
-        // Переопределяем метод ToString для вывода в виде строки
+        // Фабричный метод
+        public static Author Create(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new ArgumentException("Имя автора не может быть пустым или состоять только из пробелов.", nameof(name));
+            }
+
+            return new Author(name);
+        }
+
         public override string ToString() => Name;
     }
 }

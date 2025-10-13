@@ -1,47 +1,72 @@
 ﻿using Domain.Book.VO;
+using System;
 
-public class Book
+namespace Domain.Book
 {
-    public BookId Id { get; }
-    public Title BookTitle { get; }
-    public Author Author { get; }
-    public BookStatusValue Status { get; private set; }
-
-    public Book(BookId id, Title title, Author author, BookStatusValue status)
+    public class Book
     {
-        Id = id;
-        BookTitle = title;
-        Author = author;
-        Status = status ?? throw new ArgumentNullException(nameof(status), "Статус книги не может быть null.");
-    }
+        public BookId Id { get; }
+        public Title BookTitle { get; }
+        public Author Author { get; }
+        public BookStatusValue Status { get; private set; }
 
-    // Метод для изменения статуса книги
-    public void UpdateStatus(BookStatus newStatus)
-    {
-        // Можно добавить проверку например что книга не может быть изменена на тот же статусс
-        if (Status.Status == newStatus)
+        // ЗАКРЫТЫЙ КОНСТРУКТОР: используется только для инициализации
+        private Book(BookId id, Title title, Author author, BookStatusValue status)
         {
-            throw new InvalidOperationException("Статус книги уже установлен на выбранное значение.");
+            Id = id;
+            BookTitle = title;
+            Author = author;
+            Status = status ?? throw new ArgumentNullException(nameof(status), "Статус книги не может быть null.");
         }
 
-        // Допустим, только "Available" можно изменять на "Reserved" или "Exchanged"
-        if (Status.Status == BookStatus.Available && (newStatus == BookStatus.Reserved || newStatus == BookStatus.Exchanged))
+        // ФАБРИЧНЫЙ МЕТОД: для создания существующей книги
+        public static Book Create(BookId id, Title title, Author author, BookStatusValue status)
         {
-            Status = new BookStatusValue(newStatus);
-        }
-        else if (Status.Status == BookStatus.Reserved && newStatus == BookStatus.Exchanged)
-        {
-            Status = new BookStatusValue(newStatus);
-        }
-        else
-        {
-            throw new InvalidOperationException("Невозможно изменить статус книги в текущем состоянии.");
-        }
-    }
+            if (id == null) throw new ArgumentNullException(nameof(id), "Идентификатор книги не может быть пустым.");
+            if (title == null) throw new ArgumentNullException(nameof(title), "Название книги не может быть пустым.");
+            if (author == null) throw new ArgumentNullException(nameof(author), "Автор книги не может быть пустым.");
+            // Status проверяется в конструкторе
 
-    // Метод для отображения информации о книге
-    public override string ToString()
-    {
-        return $"Книга: {BookTitle} автор: {Author} - Статус: {Status}";
+            return new Book(id, title, author, status);
+        }
+
+        // ФАБРИЧНЫЙ МЕТОД: для создания НОВОЙ книшги
+        public static Book New(Title title, Author author)
+        {
+            var id = BookId.Create(Guid.NewGuid());
+            var status = BookStatusValue.Create(BookStatus.Available);
+
+            return Create(id, title, author, status);
+        }
+
+        // МЕТОД, ИЗМЕНЯЮЩИЙ СОСТОЯНИЕ: Изменить статус книги
+        public void UpdateStatus(BookStatus newStatus)
+        {
+            if (Status.Status == newStatus)
+            {
+                throw new InvalidOperationException("Статус книги уже установлен на выбранное значение.");
+            }
+
+
+            // BookStatusValue — это ValueObject
+            if (Status.Status == BookStatus.Available && (newStatus == BookStatus.Reserved || newStatus == BookStatus.Exchanged))
+            {
+                Status = BookStatusValue.Create(newStatus);
+            }
+            else if (Status.Status == BookStatus.Reserved && newStatus == BookStatus.Exchanged)
+            {
+                Status = BookStatusValue.Create(newStatus);
+            }
+            else
+            {
+                throw new InvalidOperationException($"Невозможно изменить статус книги с '{Status.Status}' на '{newStatus}' в текущем состоянии.");
+            }
+        }
+
+        // Метод для отображения информации о книге
+        public override string ToString()
+        {
+            return $"Книга: {BookTitle} Автор: {Author} - Статус: {Status}";
+        }
     }
 }

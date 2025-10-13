@@ -1,32 +1,47 @@
-﻿using Domain.Book.VO;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Domain.Book.VO;
 
 namespace Domain.User.VO
 {
-    public class WishList
+    public record WishList
     {
-        public List<BookId> Books { get; }  
+        public IReadOnlyList<BookId> Books { get; }
 
-        public WishList(List<BookId> books = null)
+        private WishList(IReadOnlyList<BookId> books)
         {
-            Books = books ?? new List<BookId>();
+            Books = books;
         }
 
-        public void AddBook(BookId book)
+        public static WishList Create(IEnumerable<BookId> books = null)
         {
-            if (!Books.Contains(book))  
-            {
-                Books.Add(book);
-            }
+            var list = (books ?? Enumerable.Empty<BookId>()).ToList().AsReadOnly();
+            return new WishList(list);
         }
 
-        public void RemoveBook(BookId book)
+        // Возвращает новый WishList с добавленной книгой
+        public WishList Add(BookId book)
         {
-            Books.Remove(book);
+            if (book == null) throw new ArgumentNullException(nameof(book));
+            if (Books.Contains(book)) return this;
+
+            var newList = Books.ToList();
+            newList.Add(book);
+            return new WishList(newList.AsReadOnly());
         }
 
-        public override string ToString()
+        // Возвращает новый WishList с удалённой книгой
+        public WishList Remove(BookId book)
         {
-            return string.Join(", ", Books.Select(b => b.ToString()));
+            if (book == null) throw new ArgumentNullException(nameof(book));
+            if (!Books.Contains(book)) return this;
+
+            var newList = Books.ToList();
+            newList.RemoveAll(b => b == book);
+            return new WishList(newList.AsReadOnly());
         }
+
+        public override string ToString() => string.Join(", ", Books.Select(b => b.ToString()));
     }
 }
