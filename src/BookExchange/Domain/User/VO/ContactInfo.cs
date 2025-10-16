@@ -1,34 +1,36 @@
-﻿namespace Domain.User.VO
+﻿using System;
+
+namespace Domain.User.VO
 {
     // Объект значения для контактных данных пользователя
     public record ContactInfo
     {
-        public string Phone { get; }
-        public string Email { get; }
+        // Использование новых объектов-значений
+        public UserPhone Phone { get; }
+        public UserEmail Email { get; }
 
-        // Закрытый конструктор
-        private ContactInfo(string phone, string email)
+        // Закрытый конструктор теперь принимает UserPhone и UserEmail
+        private ContactInfo(UserPhone phone, UserEmail email)
         {
+            // Убрана валидация на null, т.к. она будет в Create
             Phone = phone;
             Email = email;
         }
 
-        // Фабричный метод для создания объекта
-        public static ContactInfo Create(string phone, string email)
+        public static ContactInfo Create(string phoneValue, string emailValue)
         {
-            if (string.IsNullOrWhiteSpace(phone))
-            {
-                throw new ArgumentException("Телефон не может быть пустым или состоять только из пробелов.", nameof(phone));
-            }
+            // ВАЛИДАЦИЯ СТРОК ЧЕРЕЗ РЕГУЛЯРНЫЕ ВЫРАЖЕНИЯ ПРОИСХОДИТ ЗДЕСЬ
 
-            if (string.IsNullOrWhiteSpace(email))
-            {
-                throw new ArgumentException("Электронная почта не может быть пустой или состоять только из пробелов.", nameof(email));
-            }
+            // Создаем UserPhone
+            var phone = UserPhone.Create(phoneValue);
 
+            // Создаем UserEmail
+            var email = UserEmail.Create(emailValue);
+
+            // После успешного создания объектов-значений мы уверены, что строки валидны
             return new ContactInfo(phone, email);
         }
 
-        public override string ToString() => $"{Phone}, {Email}";
+        public override string ToString() => $"{Phone.Value}, {Email.Value}";
     }
 }
