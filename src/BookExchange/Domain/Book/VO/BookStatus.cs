@@ -1,41 +1,26 @@
-﻿namespace Domain.Book.VO
+﻿using Domain.Enumerations;
+using Domain.Enumerations;
+using System;
+
+namespace Domain.Book.VO
 {
-    // Перечисление для Статуса книги
-    public enum BookStatus
+    // Класс BookStatus теперь наследует от базового класса Enumeration
+    public sealed class BookStatus : Enumeration<BookStatus>
     {
-        Available,
-        Reserved,
-        Exchanged,
-        NotAvailable
-    }
+        // Статические поля, представляющие конкретные экземпляры статусов
+        public static readonly BookStatus Available = new BookStatus(1, "Доступна");
+        public static readonly BookStatus Reserved = new BookStatus(2, "Зарезервирована");
+        public static readonly BookStatus Exchanged = new BookStatus(3, "Завершён обмен");
+        public static readonly BookStatus NotAvailable = new BookStatus(4, "Недоступна");
 
-    // Объект значения для Статуса книги
-    public record BookStatusValue
-    {
-        public BookStatus Status { get; }
+        public bool CanBeRequested() => this == Available;
 
-        // Закрытый конструктор
-        private BookStatusValue(BookStatus status)
+        public bool CanBeCancelled() => this == Reserved;
+
+        // Закрытый конструктор вызывает базовый конструктор
+        private BookStatus(int key, string name)
+            : base(key, name)
         {
-            Status = status;
-        }
-
-        // Фабричный метод
-        public static BookStatusValue Create(BookStatus status)
-        {
-            return new BookStatusValue(status);
-        }
-
-        public override string ToString()
-        {
-            return Status switch
-            {
-                BookStatus.Available => "Доступна",
-                BookStatus.Reserved => "Зарезервирована",
-                BookStatus.Exchanged => "Завершён обмен",
-                BookStatus.NotAvailable => "Недоступна",
-                _ => "Неизвестный статус"
-            };
         }
     }
 }

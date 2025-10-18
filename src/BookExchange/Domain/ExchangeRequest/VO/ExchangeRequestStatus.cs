@@ -1,32 +1,28 @@
-﻿namespace Domain.ExchangeRequest.VO
+﻿using Domain.Enumerations;
+using Domain.Enumerations;
+using System;
+
+namespace Domain.ExchangeRequest.VO
 {
-    public enum ExchangeRequestStatus
+    // Класс ExchangeRequestStatus наследует от базового класса Enumeration<T>
+    // и заменяет старые enum ExchangeRequestStatus и record ExchangeRequestStatusValue.
+    public sealed class ExchangeRequestStatus : Enumeration<ExchangeRequestStatus>
     {
-        Requested,   // Запрошено
-        InProgress,  // В процессе
-        Completed    // Завершено
-    }
+        // Статические поля, представляющие конкретные экземпляры статусов
+        public static readonly ExchangeRequestStatus Requested = new ExchangeRequestStatus(1, "Запрошено");
+        public static readonly ExchangeRequestStatus InProgress = new ExchangeRequestStatus(2, "В процессе");
+        public static readonly ExchangeRequestStatus Completed = new ExchangeRequestStatus(3, "Завершено");
+        // Добавлен новый статус
+        public static readonly ExchangeRequestStatus Cancelled = new ExchangeRequestStatus(4, "Отменено");
 
-    public record ExchangeRequestStatusValue
-    {
-        public ExchangeRequestStatus Status { get; }
+        public bool CanBeCompleted() => this == InProgress;
 
-        private ExchangeRequestStatusValue(ExchangeRequestStatus status)
+        public bool CanBeCancelled() => this == Requested || this == InProgress;
+
+        // Закрытый конструктор вызывает базовый конструктор
+        private ExchangeRequestStatus(int key, string name)
+            : base(key, name)
         {
-            Status = status;
         }
-
-        public static ExchangeRequestStatusValue Create(ExchangeRequestStatus status)
-        {
-            return new ExchangeRequestStatusValue(status);
-        }
-
-        public override string ToString() => Status switch
-        {
-            ExchangeRequestStatus.Requested => "Запрошено",
-            ExchangeRequestStatus.InProgress => "В процессе",
-            ExchangeRequestStatus.Completed => "Завершено",
-            _ => "Неизвестный статус"
-        };
     }
 }
