@@ -1,8 +1,13 @@
-﻿namespace Domain.User.VO
+﻿using System;
+
+namespace Domain.User.VO
 {
     // Объект значения для отзыва пользователя
     public record Review
     {
+        // Добавляем константу максимальной длины
+        public const int MAX_LENGTH = 500;
+
         public string Text { get; }
         public DateTime Date { get; }
 
@@ -19,6 +24,11 @@
             if (string.IsNullOrWhiteSpace(text))
             {
                 throw new ArgumentException("Отзыв не может быть пустым или состоять только из пробелов.", nameof(text));
+            }
+            // Проверка на максимальную длину
+            if (text.Length > MAX_LENGTH)
+            {
+                throw new ArgumentException($"Отзыв не может превышать {MAX_LENGTH} символов.", nameof(text));
             }
 
             return new Review(text, date);

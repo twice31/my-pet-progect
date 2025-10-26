@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Domain.User;
 using Domain.User.VO;
 using Domain.Book.VO;
-using System.Linq;
 
 namespace Data.Configurations
 {
+    // Конфигурация для маппинга агрегата User на таблицу базы данных.
     public sealed class UserConfiguration : IEntityTypeConfiguration<User>
     {
         public void Configure(EntityTypeBuilder<User> builder)
@@ -17,17 +17,16 @@ namespace Data.Configurations
             // 2. ПЕРВИЧНЫЙ КЛЮЧ И ПРОСТОЙ VO (UserId)
             builder.HasKey(u => u.Id);
 
-            // Настройка конвертера: UserId <--> Guid (для хранения в БД)
+            // Настройка конвертера: UserId <--> Guid
             builder.Property(u => u.Id)
                 .HasConversion(
-                    userId => userId.Value,          // Преобразование UserId в Guid
-                    value => UserId.Create(value)    // Преобразование Guid в UserId
+                    userId => userId.Value,
+                    value => UserId.Create(value)
                 )
                 .HasColumnName("UserId")
                 .IsRequired();
 
             // 3. СЛОЖНЫЙ VO: ContactInfo
-            // Свойства ContactInfo будут отображены в таблицу Users
             builder.OwnsOne(u => u.Contact, contactBuilder =>
             {
                 // Настройка конвертера для UserPhone
@@ -46,15 +45,16 @@ namespace Data.Configurations
                         value => UserEmail.Create(value)
                     )
                     .HasColumnName("Email")
-                    .IsRequired()
-                    // Указываем максимальную длину, используя константу из VO
-                    .HasMaxLength(UserEmail.MAX_EMAIL_LENGTH);
+                    .HasMaxLength(UserEmail.MAX_EMAIL_LENGTH)
+                    .IsRequired();
             });
+            builder.Navigation(u => u.Contact).IsRequired();
+
 
             // 4. СЛОЖНЫЙ VO: UserRating
             builder.OwnsOne(u => u.Rating, ratingBuilder =>
             {
-                // Конфигурация внутреннего VO Rating
+                // Конвертер для Rating
                 ratingBuilder.Property(r => r.Rating)
                     .HasConversion(
                         rating => rating.Value,
@@ -63,42 +63,33 @@ namespace Data.Configurations
                     .HasColumnName("RatingValue")
                     .IsRequired();
 
-                // 5. ВЛОЖЕННАЯ КОЛЛЕКЦИЯ VO: Reviews
+
+                // 5. КОЛЛЕКЦИЯ VO
                 ratingBuilder.OwnsMany(r => r.Reviews, reviewBuilder =>
                 {
                     reviewBuilder.HasKey("Id");
 
-                    reviewBuilder.WithOwner().HasForeignKey("UserId");
-                    reviewBuilder.ToTable("UserReviews");
-
                     reviewBuilder.Property(r => r.Text)
                         .HasColumnName("ReviewText")
                         .IsRequired()
-                        .HasMaxLength(500); // Ограничение длины отзыва
+                        // Используем константу MAX_LENGTH из Review.cs
+                        .HasMaxLength(Review.MAX_LENGTH);
 
                     reviewBuilder.Property(r => r.Date)
                         .HasColumnName("ReviewDate")
                         .IsRequired();
+
+                    // Связываем отзыв с пользователем
+                    reviewBuilder.WithOwner().HasForeignKey("UserId");
+                    reviewBuilder.ToTable("UserReviews");
                 });
+                ratingBuilder.Navigation(r => r.Reviews).IsRequired();
             });
+            builder.Navigation(u => u.Rating).IsRequired();
 
-            // 6. СЛОЖНЫЙ VO: WishList
-            builder.OwnsMany(u => u.WishList.Books, wishListBuilder =>
-            {
-                wishListBuilder.HasKey("Id");
-
-                // Настройка BookId
-                wishListBuilder.Property(b => b)
-                    .HasConversion(
-                        bookId => bookId.Value,
-                        value => BookId.Create(value)
-                    )
-                    .HasColumnName("BookId")
-                    .IsRequired();
-
-                wishListBuilder.WithOwner().HasForeignKey("UserId");
-                wishListBuilder.ToTable("WishListItems");
-            });
+            // 6. СЛОЖНЫЙ VO: WishList 
+            // Конфигурация WishList ВЫНЕСЕНА в WishListConfiguration.cs
+            builder.Navigation(u => u.WishList).IsRequired();
         }
     }
 }

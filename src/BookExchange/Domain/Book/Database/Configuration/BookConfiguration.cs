@@ -18,8 +18,8 @@ namespace Data.Configurations
 
             builder.Property(b => b.Id)
                 .HasConversion(
-                    bookId => bookId.Value,        
-                    value => BookId.Create(value)   
+                    bookId => bookId.Value,
+                    value => BookId.Create(value)
                 )
                 .HasColumnName("BookId")
                 .IsRequired();
@@ -32,7 +32,8 @@ namespace Data.Configurations
                     value => Title.Create(value)
                 )
                 .HasColumnName("Title")
-                .HasMaxLength(250) // Ограничение длины
+                // Используем константу из доменного объекта Title
+                .HasMaxLength(Title.MAX_LENGTH)
                 .IsRequired();
 
             builder.Property(b => b.Author)
@@ -41,7 +42,8 @@ namespace Data.Configurations
                     value => Author.Create(value)
                 )
                 .HasColumnName("Author")
-                .HasMaxLength(150) // Ограничение длины
+                // Используем константу из доменного объекта Author
+                .HasMaxLength(Author.MAX_LENGTH)
                 .IsRequired();
 
             builder.Property(b => b.Isbn)
@@ -50,7 +52,8 @@ namespace Data.Configurations
                     value => ISBN.Create(value)
                 )
                 .HasColumnName("ISBN")
-                .HasMaxLength(13) // ISBN-13
+                // Используем константу из доменного объекта ISBN
+                .HasMaxLength(ISBN.MAX_LENGTH)
                 .IsRequired();
 
             // 4. Умное перечисление

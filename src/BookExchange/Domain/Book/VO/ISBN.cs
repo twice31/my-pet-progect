@@ -6,10 +6,13 @@ namespace Domain.Book.VO
     // Объект-значение для Международного стандартного книжного номера
     public sealed record ISBN
     {
+        // Добавляем константу максимальной длины (13 символов)
+        public const int MAX_LENGTH = 13;
+
         // Regex для проверки 10 или 13 цифр.
         private static readonly Regex _isbnValidatorRegex = new Regex(
-            // Шаблон: должно быть либо 10 либо 13 цифр
-            @"^(\d{13}|\d{10})$",
+            // Шаблон: должно быть либо 13 либо 10 цифр
+            @$"^(\d{{{MAX_LENGTH}}}|\d{{{10}}})$", // Используем константу
             RegexOptions.Compiled
         );
 
@@ -20,7 +23,7 @@ namespace Domain.Book.VO
         // ФАБРИЧНЫЙ МЕТОД: с валидацией
         public static ISBN Create(string value)
         {
-            // Проверка на пустую строку
+            // 1. Проверка на пустую строку
             if (string.IsNullOrWhiteSpace(value))
             {
                 throw new ArgumentException("ISBN книги не может быть пустым.", nameof(value));
@@ -33,6 +36,12 @@ namespace Domain.Book.VO
             if (!_isbnValidatorRegex.IsMatch(cleanValue))
             {
                 throw new ArgumentException("ISBN имеет некорректный формат. Ожидается 10 или 13 цифр.", nameof(value));
+            }
+
+            // 3. Проверка длины (хотя regex уже это делает, это полезно для ясности)
+            if (cleanValue.Length != MAX_LENGTH && cleanValue.Length != 10)
+            {
+                throw new ArgumentException($"ISBN должен содержать {MAX_LENGTH} или 10 цифр.", nameof(value));
             }
 
             // сохраняем очищенное (только цифры) значение

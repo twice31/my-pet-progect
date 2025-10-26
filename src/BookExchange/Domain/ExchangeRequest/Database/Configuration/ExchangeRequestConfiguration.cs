@@ -52,12 +52,13 @@ namespace Data.Configurations
                     value => ExchangeMethod.Create(value)
                 )
                 .HasColumnName("ExchangeMethod")
-                .HasMaxLength(150)
+                // Используем константу из домен слоя 
+                .HasMaxLength(ExchangeMethod.MAX_LENGTH)
                 .IsRequired();
 
             builder.Property(e => e.Status)
                 .HasConversion(
-                    status => status.Key,           
+                    status => status.Key,
                     key => ExchangeRequestStatus.FromKey(key)
                 )
                 .HasColumnName("RequestStatusKey")
