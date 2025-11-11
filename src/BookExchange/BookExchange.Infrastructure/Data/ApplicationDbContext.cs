@@ -4,7 +4,7 @@ using Domain.Book;
 using Domain.ExchangeRequest;
 using System.Reflection;
 
-namespace Data
+namespace BookExchange.Infrastructure.Data
 {
     public sealed class ApplicationDbContext : DbContext
     {

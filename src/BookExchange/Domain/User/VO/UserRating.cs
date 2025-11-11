@@ -7,20 +7,24 @@ namespace Domain.User.VO
     public record UserRating
     {
         public Rating Rating { get; }
-        public IReadOnlyList<Review> Reviews { get; }
+        public IReadOnlyList<Review> Reviews { get; private set; }
 
-        private UserRating(Rating rating, IReadOnlyList<Review> reviews)
+        private UserRating(Rating rating)
         {
             Rating = rating;
-            Reviews = reviews;
+            Reviews = new List<Review>().AsReadOnly();
         }
 
-        public static UserRating Create(Rating rating, IEnumerable<Review> reviews = null)
+        public static UserRating Create(Rating rating, IEnumerable<Review>? reviews = null)
         {
             if (rating == null) throw new ArgumentNullException(nameof(rating));
 
+            var userRating = new UserRating(rating);
+
             var list = (reviews ?? Enumerable.Empty<Review>()).ToList().AsReadOnly();
-            return new UserRating(rating, list);
+            userRating.Reviews = list;
+
+            return userRating;
         }
 
         public override string ToString() => $"Рейтинг: {Rating}, Отзывы: {string.Join("; ", Reviews)}";

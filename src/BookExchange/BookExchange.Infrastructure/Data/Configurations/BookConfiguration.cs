@@ -2,18 +2,16 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Domain.Book;
 using Domain.Book.VO;
+using Domain.User.VO; 
 
-namespace Data.Configurations
+namespace BookExchange.Infrastructure.Data.Configurations
 {
-    /// Конфигурация для маппинга агрегата Book на таблицу базы данных.
     public sealed class BookConfiguration : IEntityTypeConfiguration<Book>
     {
         public void Configure(EntityTypeBuilder<Book> builder)
         {
-            // 1. Настройка таблицы
             builder.ToTable("Books");
 
-            // 2. Первичный ключ (BookId)
             builder.HasKey(b => b.Id);
 
             builder.Property(b => b.Id)
@@ -24,15 +22,13 @@ namespace Data.Configurations
                 .HasColumnName("BookId")
                 .IsRequired();
 
-            // 3. Объекты-значения 
 
-            builder.Property(b => b.BookTitle)
+            builder.Property(b => b.Title)
                 .HasConversion(
                     title => title.Value,
                     value => Title.Create(value)
                 )
                 .HasColumnName("Title")
-                // Используем константу из доменного объекта Title
                 .HasMaxLength(Title.MAX_LENGTH)
                 .IsRequired();
 
@@ -42,7 +38,6 @@ namespace Data.Configurations
                     value => Author.Create(value)
                 )
                 .HasColumnName("Author")
-                // Используем константу из доменного объекта Author
                 .HasMaxLength(Author.MAX_LENGTH)
                 .IsRequired();
 
@@ -52,11 +47,18 @@ namespace Data.Configurations
                     value => ISBN.Create(value)
                 )
                 .HasColumnName("ISBN")
-                // Используем константу из доменного объекта ISBN
                 .HasMaxLength(ISBN.MAX_LENGTH)
                 .IsRequired();
 
-            // 4. Умное перечисление
+            builder.Property(b => b.OwnerId)
+                .HasConversion(
+                    ownerId => ownerId.Value,
+                    value => UserId.Create(value)
+                )
+                .HasColumnName("OwnerId")
+                .IsRequired();
+
+
             builder.Property(b => b.Status)
                 .HasConversion(
                     status => status.Key,

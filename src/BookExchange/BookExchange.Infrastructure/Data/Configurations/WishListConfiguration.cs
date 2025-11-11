@@ -2,10 +2,10 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Domain.User;
 using Domain.Book.VO;
+using System;
 
-namespace Data.Configurations
+namespace BookExchange.Infrastructure.Data.Configurations
 {
-    // Отдельная конфигурация для WishList
     public sealed class WishListConfiguration : IEntityTypeConfiguration<User>
     {
         public void Configure(EntityTypeBuilder<User> builder)
@@ -14,22 +14,18 @@ namespace Data.Configurations
             {
                 wishListBuilder.OwnsMany(w => w.Books, bookIdBuilder =>
                 {
+                    bookIdBuilder.Property<Guid>("Id");
                     bookIdBuilder.HasKey("Id");
 
-                    bookIdBuilder.Property(b => b)
-                        .HasConversion(
-                            bookId => bookId.Value,
-                            value => BookId.Create(value)
-                        )
+                    bookIdBuilder.Property(b => b.Value)
                         .HasColumnName("BookId")
                         .IsRequired();
+
 
                     bookIdBuilder.WithOwner().HasForeignKey("UserId");
 
                     bookIdBuilder.ToTable("WishListItems");
                 });
-
-                wishListBuilder.Navigation(w => w.Books).IsRequired();
 
             });
         }

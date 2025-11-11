@@ -1,12 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Domain.ExchangeRequest;
+﻿using Domain.ExchangeRequest;
 using Domain.ExchangeRequest.VO;
-using Data.Converters;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
 
-namespace Data.Configurations
+namespace BookExchange.Infrastructure.Data.Configurations
 {
-    /// Конфигурация для маппинга агрегата ExchangeRequest на таблицу базы данных.
     public sealed class ExchangeRequestConfiguration : IEntityTypeConfiguration<ExchangeRequest>
     {
         public void Configure(EntityTypeBuilder<ExchangeRequest> builder)
@@ -14,6 +16,7 @@ namespace Data.Configurations
             builder.ToTable("ExchangeRequests");
 
             builder.HasKey(e => e.Id);
+
             builder.Property(e => e.Id)
                 .HasConversion(
                     requestId => requestId.Value,
@@ -22,9 +25,10 @@ namespace Data.Configurations
                 .HasColumnName("RequestId")
                 .IsRequired();
 
+
             builder.Property(e => e.RequestedBookId)
                 .HasConversion(
-                    id => id.Value,
+                    bookId => bookId.Value,
                     value => RequestedBookId.Create(value)
                 )
                 .HasColumnName("RequestedBookId")
@@ -32,7 +36,7 @@ namespace Data.Configurations
 
             builder.Property(e => e.RecipientId)
                 .HasConversion(
-                    id => id.Value,
+                    recipientId => recipientId.Value,
                     value => RecipientId.Create(value)
                 )
                 .HasColumnName("RecipientId")
@@ -40,7 +44,7 @@ namespace Data.Configurations
 
             builder.Property(e => e.BookOwnerId)
                 .HasConversion(
-                    id => id.Value,
+                    ownerId => ownerId.Value,
                     value => BookOwnerId.Create(value)
                 )
                 .HasColumnName("BookOwnerId")
@@ -52,7 +56,6 @@ namespace Data.Configurations
                     value => ExchangeMethod.Create(value)
                 )
                 .HasColumnName("ExchangeMethod")
-                // Используем константу из домен слоя 
                 .HasMaxLength(ExchangeMethod.MAX_LENGTH)
                 .IsRequired();
 
@@ -61,18 +64,29 @@ namespace Data.Configurations
                     status => status.Key,
                     key => ExchangeRequestStatus.FromKey(key)
                 )
-                .HasColumnName("RequestStatusKey")
+                .HasColumnName("StatusKey")
                 .IsRequired();
 
 
             builder.OwnsOne(e => e.History, historyBuilder =>
             {
                 historyBuilder.Property(h => h.Events)
-                    .HasConversion(new StringListConverter())
-                    .HasColumnName("ExchangeHistoryEvents")
+                    .HasConversion(
+                        v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                        v => JsonSerializer.Deserialize<IReadOnlyList<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>().AsReadOnly()
+                    )
+                    .HasColumnName("ExchangeEvents")
                     .IsRequired();
-            });
 
+                historyBuilder.Property(h => h.Events)
+                    .Metadata.SetValueComparer(
+                        new ValueComparer<IReadOnlyList<string>>(
+                            (c1, c2) => c1!.SequenceEqual(c2!), 
+                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())), 
+                            c => c.ToList().AsReadOnly() 
+                        )
+                    );
+            });
             builder.Navigation(e => e.History).IsRequired();
         }
     }

@@ -1,8 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Collections.Generic;
 using System.Linq;
+using System; 
 
-namespace Data.Converters
+namespace BookExchange.Infrastructure.Data.Converters
 {
     public class StringListConverter : ValueConverter<IReadOnlyList<string>, string>
     {
@@ -12,7 +13,7 @@ namespace Data.Converters
             : base(
                 v => string.Join(Separator, v),
 
-                v => v.Split(new[] { Separator }, System.StringSplitOptions.RemoveEmptyEntries)
+                v => v.Split(new[] { Separator }, StringSplitOptions.RemoveEmptyEntries)
                       .ToList()
                       .AsReadOnly()
             )

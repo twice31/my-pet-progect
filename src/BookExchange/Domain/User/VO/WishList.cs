@@ -7,20 +7,23 @@ namespace Domain.User.VO
 {
     public record WishList
     {
-        public IReadOnlyList<BookId> Books { get; }
+        public IReadOnlyList<BookId> Books { get; private set; }
 
-        private WishList(IReadOnlyList<BookId> books)
+        private WishList()
         {
-            Books = books;
+            Books = new List<BookId>().AsReadOnly();
         }
 
-        public static WishList Create(IEnumerable<BookId> books = null)
+        public static WishList Create(IEnumerable<BookId>? books = null)
         {
+            var wishList = new WishList();
+
             var list = (books ?? Enumerable.Empty<BookId>()).ToList().AsReadOnly();
-            return new WishList(list);
+            wishList.Books = list;
+
+            return wishList;
         }
 
-        // Возвращает новый WishList с добавленной книгой
         public WishList Add(BookId book)
         {
             if (book == null) throw new ArgumentNullException(nameof(book));
@@ -28,18 +31,17 @@ namespace Domain.User.VO
 
             var newList = Books.ToList();
             newList.Add(book);
-            return new WishList(newList.AsReadOnly());
+            return new WishList() { Books = newList.AsReadOnly() }; 
         }
 
-        // Возвращает новый WishList с удалённой книгой
         public WishList Remove(BookId book)
         {
             if (book == null) throw new ArgumentNullException(nameof(book));
             if (!Books.Contains(book)) return this;
 
             var newList = Books.ToList();
-            newList.RemoveAll(b => b == book);
-            return new WishList(newList.AsReadOnly());
+            newList.RemoveAll(b => b.Value == book.Value);
+            return new WishList() { Books = newList.AsReadOnly() }; 
         }
 
         public override string ToString() => string.Join(", ", Books.Select(b => b.ToString()));
