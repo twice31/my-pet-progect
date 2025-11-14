@@ -3,7 +3,7 @@ using BookExchange.Application.Books.DTOs;
 using BookExchange.Application.Contracts;
 using Domain.Book;
 using Domain.Book.VO;
-using Domain.User.VO; 
+using Domain.User.VO;
 using MediatR;
 using System;
 using System.Threading;
@@ -15,11 +15,13 @@ namespace BookExchange.Application.Books.Commands
     {
         private readonly IBookRepository _bookRepository;
         private readonly IMapper _mapper;
+        private readonly IUnitOfWork _unitOfWork; 
 
-        public CreateBookCommandHandler(IBookRepository bookRepository, IMapper mapper)
+        public CreateBookCommandHandler(IBookRepository bookRepository, IMapper mapper, IUnitOfWork unitOfWork)
         {
             _bookRepository = bookRepository;
             _mapper = mapper;
+            _unitOfWork = unitOfWork; 
         }
 
         public async Task<BookDto> Handle(CreateBookCommand request, CancellationToken cancellationToken)
@@ -33,7 +35,8 @@ namespace BookExchange.Application.Books.Commands
             var newBook = Book.New(title, author, isbn, ownerId);
 
             await _bookRepository.AddAsync(newBook);
-            await _bookRepository.SaveChangesAsync();
+
+            await _unitOfWork.SaveChangesAsync();
 
             var bookDto = _mapper.Map<BookDto>(newBook);
 

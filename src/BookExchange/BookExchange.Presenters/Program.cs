@@ -1,5 +1,7 @@
-using BookExchange.Infrastructure; 
-using BookExchange.Application; 
+using BookExchange.Infrastructure;
+using BookExchange.Application;
+using System.Reflection; 
+using System.IO;         
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,7 +11,12 @@ builder.Services.AddApplicationServices();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+builder.Services.AddSwaggerGen(options =>
+{
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+});
 
 var app = builder.Build();
 

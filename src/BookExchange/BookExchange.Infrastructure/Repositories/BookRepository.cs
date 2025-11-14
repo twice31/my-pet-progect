@@ -1,4 +1,4 @@
-﻿using BookExchange.Application.Contracts; 
+﻿using BookExchange.Application.Contracts;
 using Domain.Book;
 using Domain.Book.VO;
 using Microsoft.EntityFrameworkCore;
@@ -19,10 +19,9 @@ namespace BookExchange.Infrastructure.Repositories
             _dbContext = dbContext;
         }
 
-        public Task AddAsync(Book book)
+        public async Task AddAsync(Book book)
         {
-            _dbContext.Books.Add(book);
-            return Task.CompletedTask;
+            await _dbContext.Books.AddAsync(book);
         }
 
         public void Delete(Book book)
@@ -30,10 +29,6 @@ namespace BookExchange.Infrastructure.Repositories
             _dbContext.Books.Remove(book);
         }
 
-        public async Task<IReadOnlyList<Book>> GetAllAsync()
-        {
-            return await _dbContext.Books.AsNoTracking().ToListAsync();
-        }
 
         public async Task<Book?> GetByIdAsync(BookId id)
         {
@@ -47,14 +42,5 @@ namespace BookExchange.Infrastructure.Repositories
             return _dbContext.Books.AnyAsync(b => b.Id == id);
         }
 
-        public Task<int> SaveChangesAsync()
-        {
-            return _dbContext.SaveChangesAsync();
-        }
-
-        public void Update(Book book)
-        {
-            _dbContext.Entry(book).State = EntityState.Modified;
-        }
     }
 }

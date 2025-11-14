@@ -5,11 +5,14 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http; 
-using Microsoft.AspNetCore.Authorization; 
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BookExchange.Presenters.Controllers
 {
+    /// <summary>
+    /// Контроллер для управления операциями, связанными с книгами.
+    /// </summary>
     [ApiController]
     [Route("api/v1/[controller]")]
     public class BookController : ControllerBase
@@ -21,7 +24,11 @@ namespace BookExchange.Presenters.Controllers
             _mediator = mediator;
         }
 
-
+        /// <summary>
+        /// Создает новую книгу в системе.
+        /// </summary>
+        /// <param name="command">Данные книги и ID владельца.</param>
+        /// <returns>Возвращает статус 201 Created и DTO созданной книги.</returns>
         [HttpPost]
         [ProducesResponseType(typeof(BookDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -39,9 +46,6 @@ namespace BookExchange.Presenters.Controllers
             var bookDto = await _mediator.Send(command);
 
             return StatusCode(StatusCodes.Status201Created, bookDto);
-
-
-
         }
     }
 }

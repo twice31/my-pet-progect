@@ -18,6 +18,8 @@ namespace BookExchange.Infrastructure
 
             services.AddScoped<IBookRepository, BookRepository>();
 
+            services.AddScoped<IUnitOfWork, ApplicationDbContext>();
+
 
             return services;
         }
