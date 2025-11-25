@@ -1,9 +1,27 @@
 using BookExchange.Infrastructure;
 using BookExchange.Application;
-using System.Reflection; 
-using System.IO;         
+using System.Reflection;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
+
+
+PostgreSqlConnectionOptions? options = builder
+    .Configuration
+    .GetSection(nameof(PostgreSqlConnectionOptions))
+    .Get<PostgreSqlConnectionOptions>();
+
+if (options == null)
+{
+    throw new ApplicationException("Конфигурация базы данных PostgreSQL не задана.");
+}
+
+Console.WriteLine(options.HostName);
+Console.WriteLine(options.DatabaseName);
+Console.WriteLine(options.UserName);
+Console.WriteLine(options.Password);
+
+
 
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
