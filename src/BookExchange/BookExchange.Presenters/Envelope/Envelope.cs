@@ -1,46 +1,68 @@
-﻿namespace BookExchange.Presenters.Envelope
+﻿using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+
+namespace BookExchange.Presenters.Envelope
 {
-    /// <summary>
-    /// Унифицированный контейнер (Envelope) для всех ответов API.
-    /// </summary>
-    /// <typeparam name="T">Тип возвращаемых данных.</typeparam>
-    public class Envelope<T>
+    public class Envelope<T> : IResult
     {
-        /// <summary>
-        /// Полезная нагрузка (данные), возвращаемая клиенту. Может быть null.
-        /// </summary>
-        public T? Data { get; }
+        [JsonInclude]
+        public T? Data { get; init; }
 
-        /// <summary>
-        /// Флаг, указывающий на успешное выполнение запроса.
-        /// </summary>
-        public bool IsSuccess { get; }
+        [JsonInclude]
+        public string? Error { get; init; }
 
-        /// <summary>
-        /// Сообщение об ошибке, если запрос не удался.
-        /// </summary>
-        public string? ErrorMessage { get; }
-
-        /// <summary>
-        /// Конструктор для успешного ответа.
-        /// </summary>
-        /// <param name="data">Возвращаемые данные.</param>
-        public Envelope(T data)
+        private Envelope(T? data, string? error)
         {
             Data = data;
-            IsSuccess = true;
-            ErrorMessage = null;
+            Error = error;
         }
 
-        /// <summary>
-        /// Конструктор для ответа с ошибкой.
-        /// </summary>
-        /// <param name="errorMessage">Сообщение об ошибке.</param>
-        public Envelope(string errorMessage)
+
+        [JsonIgnore]
+        public int StatusCode { get; private set; } = StatusCodes.Status200OK;
+
+        public Task ExecuteAsync(HttpContext httpContext)
         {
-            Data = default;
-            IsSuccess = false;
-            ErrorMessage = errorMessage;
+            httpContext.Response.StatusCode = this.StatusCode;
+
+            return httpContext.Response.WriteAsJsonAsync(this, this.GetType());
         }
+
+
+        public static Envelope<T> Ok(T data) => new(data, null);
+
+        public static Envelope<T> Created(T data) => new(data, null) { StatusCode = StatusCodes.Status201Created };
+
+        public static Envelope<T> NotFound(string errorMessage) => new(default, errorMessage) { StatusCode = StatusCodes.Status404NotFound };
+
+        public static Envelope<T> BadRequest(string errorMessage) => new(default, errorMessage) { StatusCode = StatusCodes.Status400BadRequest };
+
+        public static Envelope<T> InternalServerError(string errorMessage) => new(default, errorMessage) { StatusCode = StatusCodes.Status500InternalServerError };
+
+        public static Envelope<T> Conflict(string errorMessage) => new(default, errorMessage) { StatusCode = StatusCodes.Status409Conflict };
+    }
+
+    public class Envelope : IResult
+    {
+        [JsonInclude]
+        public string? Error { get; init; }
+
+        private Envelope(string? error)
+        {
+            Error = error;
+        }
+
+        [JsonIgnore]
+        public int StatusCode { get; private set; } = StatusCodes.Status204NoContent;
+
+        public Task ExecuteAsync(HttpContext httpContext)
+        {
+            httpContext.Response.StatusCode = this.StatusCode;
+            return httpContext.Response.WriteAsJsonAsync(this, this.GetType());
+        }
+
+        public static Envelope NoContent() => new(null) { StatusCode = StatusCodes.Status204NoContent };
+        public static Envelope NotFound(string errorMessage) => new(errorMessage) { StatusCode = StatusCodes.Status404NotFound };
     }
 }
