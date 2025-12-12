@@ -29,7 +29,6 @@ namespace BookExchange.Infrastructure.Repositories
             _dbContext.Books.Remove(book);
         }
 
-
         public async Task<Book?> GetByIdAsync(BookId id)
         {
             return await _dbContext.Books
@@ -42,5 +41,11 @@ namespace BookExchange.Infrastructure.Repositories
             return _dbContext.Books.AnyAsync(b => b.Id == id);
         }
 
+        public async Task<List<Book>> GetAllAsync()
+        {
+            return await _dbContext.Books
+                .AsNoTracking()
+                .ToListAsync();
+        }
     }
 }

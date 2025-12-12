@@ -1,51 +1,74 @@
-﻿using BookExchange.Application.Books.Commands;
-using BookExchange.Application.Books.DTOs;
+﻿using Microsoft.AspNetCore.Mvc;
 using MediatR;
-using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
-using System;
+using BookExchange.Application.Books.DTOs;
+using BookExchange.Application.Books.Commands;
+using BookExchange.Application.Books.Queries;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Authorization;
+using System;
+using CreateBookDto = BookExchange.Presenters.Dtos.CreateBookDto;
 
 namespace BookExchange.Presenters.Controllers
 {
     /// <summary>
-    /// Контроллер для управления операциями, связанными с книгами.
+    /// Контроллер для управления книгами.
+    /// Перенаправляет запросы в Application-слой через IMediator (CQRS).
     /// </summary>
     [ApiController]
-    [Route("api/v1/[controller]")]
-    public class BookController : ControllerBase
+    [Route("api/[controller]")]
+    public class BooksController : ControllerBase
     {
         private readonly IMediator _mediator;
 
-        public BookController(IMediator mediator)
+        public BooksController(IMediator mediator)
         {
             _mediator = mediator;
         }
 
         /// <summary>
-        /// Создает новую книгу в системе.
+        /// Возвращает список всех книг в системе (CQRS Query: GetAllBooksQuery).
         /// </summary>
-        /// <param name="command">Данные книги и ID владельца.</param>
-        /// <returns>Возвращает статус 201 Created и DTO созданной книги.</returns>
-        [HttpPost]
-        [ProducesResponseType(typeof(BookDto), StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> CreateBook([FromBody] CreateBookCommand command)
+        [HttpGet]
+        [ProducesResponseType(typeof(Envelope.Envelope<List<BookDto>>), StatusCodes.Status200OK)]
+        public async Task<IResult> GetAll(CancellationToken ct)
         {
-            var ownerIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var query = new GetAllBooksQuery();
+            List<BookDto> books = await _mediator.Send(query, ct);
+            return Envelope.Envelope<List<BookDto>>.Ok(books);
+        }
 
-            if (string.IsNullOrEmpty(ownerIdClaim) || !Guid.TryParse(ownerIdClaim, out var ownerIdGuid))
+        /// <summary>
+        /// Создает новую книгу (CQRS Command: CreateBookCommand).
+        /// </summary>
+        [HttpPost]
+        [ProducesResponseType(typeof(Envelope.Envelope<BookDto>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(Envelope.Envelope), StatusCodes.Status400BadRequest)]
+        public async Task<IResult> Create([FromBody] CreateBookDto dto, CancellationToken ct)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Title) || string.IsNullOrWhiteSpace(dto.Author))
             {
-                return Unauthorized("Не удалось определить идентификатор владельца книги. Требуется аутентификация.");
+                return Envelope.Envelope<BookDto>.BadRequest("Название и автор книги обязательны.");
             }
 
-            command.OwnerId = ownerIdGuid;
+            var command = new CreateBookCommand
+            {
+                OwnerId = Guid.Parse("00000000-0000-0000-0000-000000000001"),
+                Title = dto.Title,
+                Author = dto.Author,
+                ISBN = dto.Isbn ?? string.Empty
+            };
 
-            var bookDto = await _mediator.Send(command);
-
-            return StatusCode(StatusCodes.Status201Created, bookDto);
+            try
+            {
+                BookDto newBookDto = await _mediator.Send(command, ct);
+                return Envelope.Envelope<BookDto>.Created(newBookDto);
+            }
+            catch (Exception ex)
+            {
+                return Envelope.Envelope<BookDto>.BadRequest(ex.Message);
+            }
         }
+
     }
 }

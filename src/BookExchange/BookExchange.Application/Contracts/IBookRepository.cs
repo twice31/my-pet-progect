@@ -10,8 +10,8 @@ namespace BookExchange.Application.Contracts
         Task<Book?> GetByIdAsync(BookId id);
         Task AddAsync(Book book);
         void Delete(Book book);
-
-
         Task<bool> ExistsAsync(BookId id);
+
+        Task<List<Domain.Book.Book>> GetAllAsync();
     }
 }
