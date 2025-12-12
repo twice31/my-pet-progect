@@ -1,5 +1,5 @@
 ﻿using Domain.Book.VO;
-using Domain.User.VO; 
+using Domain.User.VO;
 using System;
 
 namespace Domain.Book
@@ -7,17 +7,17 @@ namespace Domain.Book
     public class Book
     {
         public BookId Id { get; }
-        public Title Title { get; }
-        public Author Author { get; }
-        public ISBN Isbn { get; }
+        public Title Title { get; private set; }
+        public Author Author { get; private set; }
+        public ISBN Isbn { get; private set; }
         public BookStatus Status { get; private set; }
         public UserId OwnerId { get; }
 
         private Book(BookId id, Title title, Author author, ISBN isbn, BookStatus status, UserId ownerId)
         {
             Id = id;
-            Title = title;
-            Author = author;
+            Title = title ?? throw new ArgumentNullException(nameof(title), "Название книги не может быть null.");
+            Author = author ?? throw new ArgumentNullException(nameof(author), "Автор книги не может быть null.");
             Isbn = isbn ?? throw new ArgumentNullException(nameof(isbn), "ISBN книги не может быть null.");
             Status = status ?? throw new ArgumentNullException(nameof(status), "Статус книги не может быть null.");
             OwnerId = ownerId ?? throw new ArgumentNullException(nameof(ownerId), "Владелец книги не может быть null.");
@@ -39,6 +39,19 @@ namespace Domain.Book
             var status = BookStatus.Available;
 
             return Create(id, title, author, isbn, status, ownerId);
+        }
+
+        /// <summary>
+        /// Обновляет детали книги (Название, Автор, ISBN).
+        /// </summary>
+        /// <param name="newTitle">Новое название книги (VO).</param>
+        /// <param name="newAuthor">Новый автор книги (VO).</param>
+        /// <param name="newIsbn">Новый ISBN книги (VO).</param>
+        public void UpdateDetails(Title newTitle, Author newAuthor, ISBN newIsbn)
+        {
+            Title = newTitle ?? throw new ArgumentNullException(nameof(newTitle), "Название книги не может быть null при обновлении.");
+            Author = newAuthor ?? throw new ArgumentNullException(nameof(newAuthor), "Автор книги не может быть null при обновлении.");
+            Isbn = newIsbn ?? throw new ArgumentNullException(nameof(newIsbn), "ISBN книги не может быть null при обновлении.");
         }
 
         public void UpdateStatus(BookStatus newStatus)

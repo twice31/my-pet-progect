@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis; 
+using System.Diagnostics.CodeAnalysis;
+using Microsoft.EntityFrameworkCore.Migrations.Operations;
 
 namespace BookExchange.Infrastructure
 {
@@ -12,7 +13,7 @@ namespace BookExchange.Infrastructure
 
         public string BuildConnectionString()
         {
-            throw new NotImplementedException();
+            return $"Host={HostName};Database={DatabaseName};Username={UserName};Password={Password}";
         }
     }
 }
