@@ -1,6 +1,8 @@
 using BookExchange.Infrastructure;
 using BookExchange.Application;
 using System.Reflection;
+using Microsoft.EntityFrameworkCore;
+using BookExchange.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +30,12 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
+
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await dbContext.Database.MigrateAsync();
+}
 
 if (app.Environment.IsDevelopment())
 {
