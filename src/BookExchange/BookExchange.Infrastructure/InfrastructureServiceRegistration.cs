@@ -4,31 +4,23 @@ using Microsoft.EntityFrameworkCore;
 using BookExchange.Infrastructure.Data;
 using BookExchange.Application.Contracts;
 using BookExchange.Infrastructure.Repositories;
-using System;
+
 namespace BookExchange.Infrastructure
 {
     public static class InfrastructureServiceRegistration
     {
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
         {
-            PostgreSqlConnectionOptions? options = configuration
-                .GetSection(nameof(PostgreSqlConnectionOptions))
-                .Get<PostgreSqlConnectionOptions>();
+            var options = new PostgresConnectionOptions();
+            configuration.GetSection("PostgresConnectionOptions").Bind(options);
 
-            if (options is null)
-            {
-                throw new ApplicationException("Конфигурация базы данных PostgreSQL не задана.");
-            }
+            services.AddSingleton(Microsoft.Extensions.Options.Options.Create(options));
 
-            string connectionString = options.BuildConnectionString();
-
-            services.AddDbContext<ApplicationDbContext>(opt =>
-            {
-                opt.UseNpgsql(connectionString);
-            });
+            services.AddDbContext<ApplicationDbContext>();
 
             services.AddScoped<IBookRepository, BookRepository>();
-            services.AddScoped<IUnitOfWork, ApplicationDbContext>();
+
+            services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
 
             return services;
         }
