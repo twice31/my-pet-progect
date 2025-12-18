@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BookExchange.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class FinalModelSetup : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,12 +15,12 @@ namespace BookExchange.Infrastructure.Migrations
                 name: "Books",
                 columns: table => new
                 {
-                    BookId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Title = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
-                    Author = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
-                    ISBN = table.Column<string>(type: "nvarchar(13)", maxLength: 13, nullable: false),
-                    StatusKey = table.Column<int>(type: "int", nullable: false),
-                    OwnerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    BookId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Title = table.Column<string>(type: "character varying(250)", maxLength: 250, nullable: false),
+                    Author = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    ISBN = table.Column<string>(type: "character varying(13)", maxLength: 13, nullable: false),
+                    StatusKey = table.Column<int>(type: "integer", nullable: false),
+                    OwnerId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -31,13 +31,13 @@ namespace BookExchange.Infrastructure.Migrations
                 name: "ExchangeRequests",
                 columns: table => new
                 {
-                    RequestId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    RequestedBookId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    RecipientId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    BookOwnerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ExchangeMethod = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
-                    StatusKey = table.Column<int>(type: "int", nullable: false),
-                    ExchangeEvents = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    RequestId = table.Column<Guid>(type: "uuid", nullable: false),
+                    RequestedBookId = table.Column<Guid>(type: "uuid", nullable: false),
+                    RecipientId = table.Column<Guid>(type: "uuid", nullable: false),
+                    BookOwnerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ExchangeMethod = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    StatusKey = table.Column<int>(type: "integer", nullable: false),
+                    ExchangeEvents = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -48,10 +48,10 @@ namespace BookExchange.Infrastructure.Migrations
                 name: "Users",
                 columns: table => new
                 {
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Phone = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    RatingValue = table.Column<double>(type: "float", nullable: false)
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Phone = table.Column<string>(type: "text", nullable: false),
+                    Email = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    RatingValue = table.Column<double>(type: "double precision", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -62,10 +62,10 @@ namespace BookExchange.Infrastructure.Migrations
                 name: "UserReviews",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ReviewText = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    ReviewDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ReviewText = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    ReviewDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -82,9 +82,9 @@ namespace BookExchange.Infrastructure.Migrations
                 name: "WishListItems",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    BookId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    BookId = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
