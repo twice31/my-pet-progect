@@ -4,12 +4,15 @@ using Domain.User;
 using Domain.Book;
 using Domain.ExchangeRequest;
 using BookExchange.Application.Contracts;
+using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace BookExchange.Infrastructure.Data
 {
     public sealed class ApplicationDbContext : DbContext, IUnitOfWork
     {
         private readonly string _connectionString;
+        private IDbContextTransaction? _currentTransaction;
 
         public DbSet<User> Users { get; set; }
         public DbSet<Book> Books { get; set; }
@@ -25,9 +28,33 @@ namespace BookExchange.Infrastructure.Data
             return await base.SaveChangesAsync();
         }
 
+        public async Task BeginTransactionAsync()
+        {
+            if (_currentTransaction != null) return;
+            _currentTransaction = await Database.BeginTransactionAsync();
+        }
+
+        public async Task CommitTransactionAsync()
+        {
+            if (_currentTransaction == null) return;
+            await _currentTransaction.CommitAsync();
+            _currentTransaction.Dispose();
+            _currentTransaction = null;
+        }
+
+        public async Task RollbackTransactionAsync()
+        {
+            if (_currentTransaction == null) return;
+            await _currentTransaction.RollbackAsync();
+            _currentTransaction.Dispose();
+            _currentTransaction = null;
+        }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseNpgsql(_connectionString);
+            optionsBuilder
+                .UseNpgsql(_connectionString)
+                .LogTo(Console.WriteLine, LogLevel.Information);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

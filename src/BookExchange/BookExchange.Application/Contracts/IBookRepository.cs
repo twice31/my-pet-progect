@@ -8,10 +8,12 @@ namespace BookExchange.Application.Contracts
     public interface IBookRepository
     {
         Task<Book?> GetByIdAsync(BookId id);
+
+        Task<Book?> GetByIdWithLockAsync(BookId id);
+
         Task AddAsync(Book book);
         void Delete(Book book);
         Task<bool> ExistsAsync(BookId id);
-
-        Task<List<Domain.Book.Book>> GetAllAsync();
+        Task<List<Book>> GetAllAsync();
     }
 }

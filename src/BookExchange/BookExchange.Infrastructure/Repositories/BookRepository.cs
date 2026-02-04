@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
-
 using BookExchange.Infrastructure.Data;
 
 namespace BookExchange.Infrastructure.Repositories
@@ -32,8 +31,14 @@ namespace BookExchange.Infrastructure.Repositories
         public async Task<Book?> GetByIdAsync(BookId id)
         {
             return await _dbContext.Books
-                .AsNoTracking()
                 .SingleOrDefaultAsync(b => b.Id == id);
+        }
+
+        public async Task<Book?> GetByIdWithLockAsync(BookId id)
+        {
+            return await _dbContext.Books
+                .FromSqlRaw("SELECT * FROM \"Books\" WHERE \"Id\" = {0} FOR UPDATE", id.Value)
+                .SingleOrDefaultAsync();
         }
 
         public Task<bool> ExistsAsync(BookId id)
@@ -43,9 +48,7 @@ namespace BookExchange.Infrastructure.Repositories
 
         public async Task<List<Book>> GetAllAsync()
         {
-            return await _dbContext.Books
-                .AsNoTracking()
-                .ToListAsync();
+            return await _dbContext.Books.ToListAsync();
         }
     }
 }

@@ -3,6 +3,7 @@ using BookExchange.Application.Books.DTOs;
 using BookExchange.Application.Contracts;
 using Domain.Book.VO;
 using MediatR;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Domain.Book;
@@ -24,25 +25,37 @@ namespace BookExchange.Application.Books.Commands
 
         public async Task<BookDto?> Handle(UpdateBookCommand request, CancellationToken cancellationToken)
         {
-            var bookId = BookId.Create(request.Id);
-            var book = await _bookRepository.GetByIdAsync(bookId);
+            await _unitOfWork.BeginTransactionAsync();
 
-            if (book == null)
+            try
             {
-                return null; // Книга не найдена
+                var bookId = BookId.Create(request.Id);
+
+                var book = await _bookRepository.GetByIdWithLockAsync(bookId);
+
+                if (book == null)
+                {
+                    await _unitOfWork.RollbackTransactionAsync();
+                    return null;
+                }
+
+                book.UpdateDetails(
+                    Title.Create(request.Title),
+                    Author.Create(request.Author),
+                    ISBN.Create(request.ISBN)
+                );
+
+                await _unitOfWork.SaveChangesAsync();
+
+                await _unitOfWork.CommitTransactionAsync();
+
+                return _mapper.Map<BookDto>(book);
             }
-
-            // Обновление доменной сущности с помощью доменных правил
-            book.UpdateDetails(
-                Title.Create(request.Title),
-                Author.Create(request.Author),
-                ISBN.Create(request.ISBN)
-            );
-
-            // Сохраняем изменения
-            await _unitOfWork.SaveChangesAsync();
-
-            return _mapper.Map<BookDto>(book);
+            catch (Exception)
+            {
+                await _unitOfWork.RollbackTransactionAsync();
+                throw;
+            }
         }
     }
 }
