@@ -14,28 +14,33 @@ namespace BookExchange.Application.Books.Commands
     {
         private readonly IBookRepository _bookRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IDbTransactionManager _transactionManager;
         private readonly IMapper _mapper;
 
-        public UpdateBookCommandHandler(IBookRepository bookRepository, IUnitOfWork unitOfWork, IMapper mapper)
+        public UpdateBookCommandHandler(
+            IBookRepository bookRepository,
+            IUnitOfWork unitOfWork,
+            IDbTransactionManager transactionManager,
+            IMapper mapper)
         {
             _bookRepository = bookRepository;
             _unitOfWork = unitOfWork;
+            _transactionManager = transactionManager;
             _mapper = mapper;
         }
 
-        public async Task<BookDto?> Handle(UpdateBookCommand request, CancellationToken cancellationToken)
+        public async Task<BookDto?> Handle(UpdateBookCommand request, CancellationToken ct)
         {
-            await _unitOfWork.BeginTransactionAsync();
+            await _transactionManager.BeginTransactionAsync(ct);
 
             try
             {
                 var bookId = BookId.Create(request.Id);
-
-                var book = await _bookRepository.GetByIdWithLockAsync(bookId);
+                var book = await _bookRepository.GetByIdWithLockAsync(bookId, ct);
 
                 if (book == null)
                 {
-                    await _unitOfWork.RollbackTransactionAsync();
+                    await _transactionManager.RollbackTransactionAsync(ct);
                     return null;
                 }
 
@@ -45,15 +50,14 @@ namespace BookExchange.Application.Books.Commands
                     ISBN.Create(request.ISBN)
                 );
 
-                await _unitOfWork.SaveChangesAsync();
-
-                await _unitOfWork.CommitTransactionAsync();
+                await _unitOfWork.SaveChangesAsync(ct);
+                await _transactionManager.CommitTransactionAsync(ct);
 
                 return _mapper.Map<BookDto>(book);
             }
             catch (Exception)
             {
-                await _unitOfWork.RollbackTransactionAsync();
+                await _transactionManager.RollbackTransactionAsync(ct);
                 throw;
             }
         }

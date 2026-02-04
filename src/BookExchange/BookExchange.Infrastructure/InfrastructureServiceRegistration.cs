@@ -22,6 +22,7 @@ namespace BookExchange.Infrastructure
 
             services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
 
+            services.AddScoped<IDbTransactionManager>(sp => sp.GetRequiredService<ApplicationDbContext>());
 
             return services;
         }
