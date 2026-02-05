@@ -3,9 +3,8 @@ using Domain.Book;
 using Domain.Book.VO;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Linq;
-
 using BookExchange.Infrastructure.Data;
 
 namespace BookExchange.Infrastructure.Repositories
@@ -19,9 +18,9 @@ namespace BookExchange.Infrastructure.Repositories
             _dbContext = dbContext;
         }
 
-        public async Task AddAsync(Book book)
+        public async Task AddAsync(Book book, CancellationToken cancellationToken = default)
         {
-            await _dbContext.Books.AddAsync(book);
+            await _dbContext.Books.AddAsync(book, cancellationToken);
         }
 
         public void Delete(Book book)
@@ -29,23 +28,27 @@ namespace BookExchange.Infrastructure.Repositories
             _dbContext.Books.Remove(book);
         }
 
-        public async Task<Book?> GetByIdAsync(BookId id)
+        public async Task<Book?> GetByIdAsync(BookId id, CancellationToken cancellationToken = default)
         {
             return await _dbContext.Books
-                .AsNoTracking()
-                .SingleOrDefaultAsync(b => b.Id == id);
+                .SingleOrDefaultAsync(b => b.Id == id, cancellationToken);
         }
 
-        public Task<bool> ExistsAsync(BookId id)
-        {
-            return _dbContext.Books.AnyAsync(b => b.Id == id);
-        }
-
-        public async Task<List<Book>> GetAllAsync()
+        public async Task<Book?> GetByIdWithLockAsync(BookId id, CancellationToken cancellationToken = default)
         {
             return await _dbContext.Books
-                .AsNoTracking()
-                .ToListAsync();
+                .FromSqlRaw("SELECT * FROM \"Books\" WHERE \"Id\" = {0} FOR UPDATE", id.Value)
+                .SingleOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task<bool> ExistsAsync(BookId id, CancellationToken cancellationToken = default)
+        {
+            return await _dbContext.Books.AnyAsync(b => b.Id == id, cancellationToken);
+        }
+
+        public async Task<List<Book>> GetAllAsync(CancellationToken cancellationToken = default)
+        {
+            return await _dbContext.Books.ToListAsync(cancellationToken);
         }
     }
 }

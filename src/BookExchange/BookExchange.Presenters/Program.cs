@@ -1,32 +1,13 @@
 using BookExchange.Infrastructure;
 using BookExchange.Application;
 using System.Reflection;
-using System.IO;
+using Microsoft.EntityFrameworkCore;
+using BookExchange.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-
-PostgreSqlConnectionOptions? options = builder
-    .Configuration
-    .GetSection(nameof(PostgreSqlConnectionOptions))
-    .Get<PostgreSqlConnectionOptions>();
-
-if (options == null)
-{
-    throw new ApplicationException("Конфигурация базы данных PostgreSQL не задана.");
-}
-
-Console.WriteLine(options.HostName);
-Console.WriteLine(options.DatabaseName);
-Console.WriteLine(options.UserName);
-Console.WriteLine(options.Password);
-
 builder.Services.AddInfrastructureServices(builder.Configuration);
-
 builder.Services.AddApplicationServices();
-
-
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -40,11 +21,21 @@ builder.Services.AddSwaggerGen(options =>
         Description = "API для обмена книгами."
     });
 
-    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        options.IncludeXmlComments(xmlPath);
+    }
 });
 
 var app = builder.Build();
+
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await dbContext.Database.MigrateAsync();
+}
 
 if (app.Environment.IsDevelopment())
 {
@@ -53,9 +44,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
