@@ -14,35 +14,31 @@ namespace BookExchange.Application.Books.Commands
     {
         private readonly IBookRepository _bookRepository;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IDbTransactionManager _transactionManager;
+        private readonly ITransactionFactory _transactionFactory;
         private readonly IMapper _mapper;
 
         public UpdateBookCommandHandler(
             IBookRepository bookRepository,
             IUnitOfWork unitOfWork,
-            IDbTransactionManager transactionManager,
+            ITransactionFactory transactionFactory,
             IMapper mapper)
         {
             _bookRepository = bookRepository;
             _unitOfWork = unitOfWork;
-            _transactionManager = transactionManager;
+            _transactionFactory = transactionFactory;
             _mapper = mapper;
         }
 
         public async Task<BookDto?> Handle(UpdateBookCommand request, CancellationToken ct)
         {
-            await _transactionManager.BeginTransactionAsync(ct);
+            await using var transaction = await _transactionFactory.BeginTransactionAsync(ct);
 
             try
             {
                 var bookId = BookId.Create(request.Id);
                 var book = await _bookRepository.GetByIdWithLockAsync(bookId, ct);
 
-                if (book == null)
-                {
-                    await _transactionManager.RollbackTransactionAsync(ct);
-                    return null;
-                }
+                if (book == null) return null;
 
                 book.UpdateDetails(
                     Title.Create(request.Title),
@@ -51,13 +47,13 @@ namespace BookExchange.Application.Books.Commands
                 );
 
                 await _unitOfWork.SaveChangesAsync(ct);
-                await _transactionManager.CommitTransactionAsync(ct);
+
+                await transaction.CommitAsync(ct);
 
                 return _mapper.Map<BookDto>(book);
             }
             catch (Exception)
             {
-                await _transactionManager.RollbackTransactionAsync(ct);
                 throw;
             }
         }

@@ -20,9 +20,8 @@ namespace BookExchange.Infrastructure
 
             services.AddScoped<IBookRepository, BookRepository>();
 
-            services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
-
-            services.AddScoped<IDbTransactionManager>(sp => sp.GetRequiredService<ApplicationDbContext>());
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<ITransactionFactory, EfTransactionFactory>();
 
             return services;
         }
